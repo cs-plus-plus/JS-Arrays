@@ -1,37 +1,45 @@
-# Unit 8.5 – Arrays (Inputs + textContent)
+# Unit 8.5 – Arrays
 
-## Notes 
+## Notes
 - Arrays can hold **mixed types** (numbers, strings, booleans, etc.).
 - Read/write by index (`arr[i]`) and use `arr.length` to access/append at the end.
 - Useful methods: `push`, `pop`, `shift`, `unshift`, `splice`, `sort` (string compare by default).
 
 ## What you’ll build
-A single button that runs `runJS()` and uses **page inputs** (not `prompt`) and **page outputs** with `textContent` (not `alert`).
+A single JavaScript file that uses `prompt()` to collect input and `console.log()` to print results.
 
-### Required page elements (IDs)
-- `color` – text input for traffic light color.
-- `n1`..`n5` – five number inputs.
-- `actionList` – where you print the action 5 times (you can use a `<ul>` or any container).
-- `average` – where you show the average of the 5 numbers.
-- `evenCount` – where you show how many of the 5 numbers are even.
-- `feedback` – where you show an error like “Invalid color”.
-- A button that calls **`runJS()`**.
+### Program behavior (in order)
+1. Ask once for a **traffic light color** (red, yellow, green — case-insensitive).
+   - If valid, print the **matching action** five times with **exact** lines:
+     - `Action: Stop` for red
+     - `Action: Slow` for yellow
+     - `Action: Go` for green
+   - If not valid, print **exactly** `Invalid color` and **do not** print the five actions.
+2. Ask for **five numbers** (five separate prompts). Store them in an **array**, then:
+   - Print the average with the **exact** format `Average: <number>`.
+   - Print how many numbers are even with the **exact** format `Even count: <number>`.
 
-## Requirements checked by the autograder
-1) **Traffic light loop (color → action ×5)**  
-   - Accept colors **red**, **yellow**, **green** (case-insensitive).  
-   - If valid, show the matching action **five times** in `#actionList` using `textContent`/DOM (e.g., 5 `<li>` items).  
-   - Mapping: red → “Stop”, yellow → “Slow”, green → “Go”.  
-   - If invalid, show an error in `#feedback` and do **not** print the five actions.
+### Example (sample console output)
+```
+Action: Go
+Action: Go
+Action: Go
+Action: Go
+Action: Go
+Average: 3
+Even count: 2
+```
 
-2) **Collect 5 numbers (array)**  
-   - Read values from `#n1..#n5`, store them in an **array**, compute the **average** and **even count**.  
-   - Display the average in `#average` and the count of evens in `#evenCount` using `textContent`.
+## Required file
+```
+script.js
+```
 
-3) **No prompts/alerts**  
-   - Don’t use `prompt()` or `alert()`; use the page UI + `textContent`.
+Place all of your code at the top level of `script.js` so it runs when the file loads.
 
-> The grader will set the inputs in the DOM, click your button (call `runJS()`), and check the content of the output elements.
-
-## Run locally
-Open your page, fill inputs, click the button, and check the outputs on the page.
+## How it will be graded
+The grader will simulate responses for `prompt()` and capture `console.log()` output to check:
+- Correct action printed five times for valid colors.
+- `Invalid color` when the color isn’t red/yellow/green.
+- Correct average and even count for five prompted numbers.
+- Use of an array to store the five numbers.
