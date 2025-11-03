@@ -7,154 +7,297 @@ on:
 jobs:
   autograde:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        id: setup_node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
 
-      - name: Bootstrap test harness files
-        id: write_tests
+      - name: Install Jest
+        run: |
+          npm init -y >/dev/null 2>&1 || true
+          npm install --save-dev jest@29
+
+      - name: Write jest config
+        run: |
+          cat > jest.config.cjs <<'EOF'
+          module.exports = {
+            testEnvironment: 'node',
+            testMatch: ['**/__tests__/**/*.test.cjs']
+          };
+          EOF
+
+      - name: Write tests
+        run: |
+          mkdir -p __tests__
+          cat > __tests__/unit-8-5-arrays.test.cjs <<'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          const scriptPath = path.resolve(process.cwd(), 'script.js');
+          const source = fs.existsSync(scriptPath)
+            ? fs.readFileSync(scriptPath, 'utf8')
+            : '';
+
+          function runWithPrompts(promptValues) {
+            if (!fs.existsSync(scriptPath)) {
+              throw new Error('script.js not found in repository root.');
+            }
+
+            const originalPrompt = global.prompt;
+            const originalConsoleLog = console.log;
+
+            let index = 0;
+            global.prompt = jest.fn(() => {
+              if (index < promptValues.length) {
+                return String(promptValues[index++]);
+              }
+              return '';
+            });
+
+            const logs = [];
+            console.log = (...args) => logs.push(args.join(' '));
+
+            delete require.cache[scriptPath];
+            try {
+              require(scriptPath);
+            } finally {
+              console.log = originalConsoleLog;
+              global.prompt = originalPrompt;
+            }
+
+            return logs.map(String);
+          }
+
+          describe('Unit 8.5 – Arrays (prompts + console.log)', () => {
+            test('green action lines', () => {
+              const logs = runWithPrompts(['GrEeN', 1, 2, 3, 4, 5]);
+              const actions = logs.filter(l => l.startsWith('Action:'));
+              expect(actions.length).toBeGreaterThanOrEqual(5);
+              expect(actions.slice(0, 5)).toEqual([
+                'Action: Go',
+                'Action: Go',
+                'Action: Go',
+                'Action: Go',
+                'Action: Go'
+              ]);
+            });
+
+            test('yellow action lines', () => {
+              const logs = runWithPrompts(['YELLOW', 1, 2, 3, 4, 5]);
+              const actions = logs.filter(l => l.startsWith('Action:'));
+              expect(actions.length).toBeGreaterThanOrEqual(5);
+              expect(actions.slice(0, 5)).toEqual([
+                'Action: Slow',
+                'Action: Slow',
+                'Action: Slow',
+                'Action: Slow',
+                'Action: Slow'
+              ]);
+            });
+
+            test('red action lines', () => {
+              const logs = runWithPrompts(['red', 1, 2, 3, 4, 5]);
+              const actions = logs.filter(l => l.startsWith('Action:'));
+              expect(actions.length).toBeGreaterThanOrEqual(5);
+              expect(actions.slice(0, 5)).toEqual([
+                'Action: Stop',
+                'Action: Stop',
+                'Action: Stop',
+                'Action: Stop',
+                'Action: Stop'
+              ]);
+            });
+
+            test('invalid color message', () => {
+              const logs = runWithPrompts(['blue', 1, 2, 3, 4, 5]);
+              const lower = logs.map(l => l.trim().toLowerCase());
+              expect(lower).toContain('invalid color');
+              const actionLines = logs.filter(l => l.startsWith('Action:'));
+              expect(actionLines.length).toBe(0);
+            });
+
+            test('average and even count are correct', () => {
+              const logs = runWithPrompts(['green', 2, 4, 6, 8, 10]);
+              const avgLine = logs.find(l => l.startsWith('Average:'));
+              const evenLine = logs.find(l => l.startsWith('Even count:'));
+
+              expect(avgLine).toBeDefined();
+              expect(evenLine).toBeDefined();
+              expect(avgLine.trim()).toBe('Average: 6');
+              expect(evenLine.trim()).toBe('Even count: 5');
+            });
+
+            test('script uses array for numbers', () => {
+              expect(source).toBeTruthy();
+              const hasBracketArray = /\[[^\]]*\]/.test(source);
+              const hasArrayCtor =
+                /new\s+Array\s*\(/i.test(source) || /Array\s*\(/.test(source);
+              const hasPush = /\.push\s*\(/.test(source);
+              const usesIndex =
+                /\[[0-4]\]/.test(source) ||
+                /\[i\]/.test(source) ||
+                /\[index\]/i.test(source);
+
+              expect(hasBracketArray || hasArrayCtor).toBe(true);
+              expect(hasPush || usesIndex).toBe(true);
+            });
+          });
+          EOF
+
+      # === Graded steps (sum to 100) ===
+      - id: t_green_action
+        name: green action lines
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: green action lines
+          setup-command: echo "ready"
+          command: npx jest --runInBand --testNamePattern "green action lines$"
+          timeout: 60
+          max-score: 15
+
+      - id: t_yellow_action
+        name: yellow action lines
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: yellow action lines
+          setup-command: echo "ready"
+          command: npx jest --runInBand --testNamePattern "yellow action lines$"
+          timeout: 60
+          max-score: 15
+
+      - id: t_red_action
+        name: red action lines
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: red action lines
+          setup-command: echo "ready"
+          command: npx jest --runInBand --testNamePattern "red action lines$"
+          timeout: 60
+          max-score: 15
+
+      - id: t_invalid_color
+        name: invalid color message
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: invalid color message
+          setup-command: echo "ready"
+          command: npx jest --runInBand --testNamePattern "invalid color message$"
+          timeout: 60
+          max-score: 10
+
+      - id: t_avg_even
+        name: average and even count are correct
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: average and even count are correct
+          setup-command: echo "ready"
+          command: npx jest --runInBand --testNamePattern "average and even count are correct$"
+          timeout: 60
+          max-score: 30
+
+      - id: t_array_usage
+        name: script uses array for numbers
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: script uses array for numbers
+          setup-command: echo "ready"
+          command: npx jest --runInBand --testNamePattern "script uses array for numbers$"
+          timeout: 60
+          max-score: 15
+
+      # === Prepare reporter env (for GitHub Classroom) ===
+      - name: Prepare reporter env
+        id: prepEnv
         shell: bash
         run: |
-          mkdir -p tests
+          echo "T_GREEN_ACTION_RESULTS=${{ steps.t_green_action.outputs.result }}"       >> "$GITHUB_ENV"
+          echo "T_YELLOW_ACTION_RESULTS=${{ steps.t_yellow_action.outputs.result }}"     >> "$GITHUB_ENV"
+          echo "T_RED_ACTION_RESULTS=${{ steps.t_red_action.outputs.result }}"           >> "$GITHUB_ENV"
+          echo "T_INVALID_COLOR_RESULTS=${{ steps.t_invalid_color.outputs.result }}"     >> "$GITHUB_ENV"
+          echo "T_AVG_EVEN_RESULTS=${{ steps.t_avg_even.outputs.result }}"               >> "$GITHUB_ENV"
+          echo "T_ARRAY_USAGE_RESULTS=${{ steps.t_array_usage.outputs.result }}"         >> "$GITHUB_ENV"
 
-          # package.json
-          cat > package.json <<'PKG'
-          {
-            "name": "unit-8-5-prompts-consolelog",
-            "version": "1.0.0",
-            "private": true,
-            "type": "module",
-            "scripts": {
-              "test": "jest --runInBand --reporters=default"
-            },
-            "devDependencies": {
-              "jest": "^29.7.0",
-              "jest-environment-node": "^29.7.0"
+            # === Combined summary using the same JSON that the reporter uses ===
+      - name: Build & publish combined summary
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+
+          const tests = [
+            { key: 'GREEN_ACTION',  label: 'green action lines',                 weight: 15 },
+            { key: 'YELLOW_ACTION', label: 'yellow action lines',                weight: 15 },
+            { key: 'RED_ACTION',    label: 'red action lines',                   weight: 15 },
+            { key: 'INVALID_COLOR', label: 'invalid color message',              weight: 10 },
+            { key: 'AVG_EVEN',      label: 'average and even count are correct', weight: 30 },
+            { key: 'ARRAY_USAGE',   label: 'script uses array for numbers',      weight: 15 },
+          ];
+
+          let total = 0;
+          let earned = 0;
+          const lines = ["# Unit 8.5 Autograder Summary", ""];
+
+          for (const t of tests) {
+            total += t.weight;
+            const envName = `T_${t.key}_RESULTS`;
+            const raw = process.env[envName] || "";
+            let passed = false;
+
+            try {
+              // Results from autograding-command-grader are base64-encoded JSON
+              let decoded;
+              try {
+                decoded = Buffer.from(raw, 'base64').toString('utf8');
+              } catch {
+                decoded = raw; // fallback if it's ever plain JSON
+              }
+
+              const obj = JSON.parse(decoded);
+
+              // GitHub Classroom format: { version, status, max_score, tests: [...] }
+              const status = (obj.status || "").toString().toLowerCase();
+
+              if (status === 'pass' || status === 'passed') {
+                passed = true;
+              } else if (Array.isArray(obj.tests)) {
+                // extra safety: if any test entry is marked pass, we treat the runner as passed
+                passed = obj.tests.some(
+                  (test) =>
+                    (test.status || "").toString().toLowerCase() === 'pass' ||
+                    (test.status || "").toString().toLowerCase() === 'passed'
+                );
+              }
+            } catch (e) {
+              // If decoding/parsing fails, treat as not passed
+            }
+
+            if (passed) {
+              earned += t.weight;
+              lines.push(`✅ ${t.label} (${t.weight} pts)`);
+            } else {
+              lines.push(`❌ ${t.label} (${t.weight} pts)`);
             }
           }
-          PKG
 
-          # jest.config.js
-          cat > jest.config.js <<'JEST'
-          export default {
-            testEnvironment: "node",
-            testMatch: ["**/tests/**/*.test.js"]
-          };
-          JEST
+          lines.push("");
+          lines.push(`**Score: ${earned}/${total}**`);
 
-          # tests/script.test.js
-          cat > tests/script.test.js <<'TEST'
-          import fs from "node:fs";
-          import vm from "node:vm";
-          import path from "node:path";
+          const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+          if (summaryPath) {
+            fs.appendFileSync(summaryPath, lines.join("\n") + "\n");
+          } else {
+            console.log(lines.join("\n"));
+          }
+          NODE
 
-          const loadStudent = (answers) => {
-            const codePath = path.resolve("script.js");
-            const code = fs.readFileSync(codePath, "utf8");
 
-            // Capture console output
-            const logs = [];
-            const sandbox = {
-              console: {
-                log: (...args) => logs.push(args.map(String).join(" ")),
-              },
-              // Mock prompt with a queue of answers
-              prompt: (() => {
-                const queue = [...answers];
-                return () => String(queue.shift() ?? "");
-              })(),
-            };
-
-            vm.createContext(sandbox);
-            const script = new vm.Script(code, { filename: "script.js" });
-            script.runInContext(sandbox);
-
-            return { logs, code };
-          };
-
-          const countOccurrences = (arr, needle) =>
-            arr.reduce((acc, line) => acc + (line.trim() === needle ? 1 : 0), 0);
-
-          test("REQUIRED: valid color prints correct action five times; numbers compute average and even count", () => {
-            const { logs } = loadStudent(["green", "1", "2", "3", "4", "5"]);
-            // There should be at least 5 exact 'Action: Go' lines and no 'Invalid color'
-            const actionCount = countOccurrences(logs, "Action: Go");
-            expect(actionCount).toBeGreaterThanOrEqual(5);
-            expect(logs.find(l => /Invalid color/i.test(l))).toBeUndefined();
-
-            // average of 1..5 = 3
-            const avgLine = logs.find(l => /^Average:\s*-?\d+(?:\.\d+)?$/.test(l.trim()));
-            expect(avgLine).toBeDefined();
-            const avgValue = Number(avgLine.split(":")[1].trim());
-            expect(avgValue).toBeCloseTo(3, 6);
-
-            // even numbers among 1..5 are 2 and 4
-            const evenLine = logs.find(l => /^Even count:\s*\d+$/.test(l.trim()));
-            expect(evenLine).toBeDefined();
-            const evenVal = Number(evenLine.split(":")[1].trim());
-            expect(evenVal).toBe(2);
-          });
-
-          test("INVALID_COLOR: prints 'Invalid color' and does not print five actions", () => {
-            const { logs } = loadStudent(["blue", "10", "20", "30", "40", "50"]);
-            const invalid = logs.find(l => /^Invalid color$/i.test(l.trim()));
-            expect(invalid).toBeDefined();
-
-            // Ensure not five action lines
-            const actionStop = logs.filter(l => l.trim() === "Action: Stop").length;
-            const actionSlow = logs.filter(l => l.trim() === "Action: Slow").length;
-            const actionGo = logs.filter(l => l.trim() === "Action: Go").length;
-            expect(actionStop + actionSlow + actionGo).toBeLessThan(5);
-          });
-
-          test("NO_FUNCTIONS: script does not define functions (no 'function' or '=>')", () => {
-            const { code } = loadStudent(["red", "2", "4", "6", "8", "10"]);
-            // crude static check that will still allow method names in strings/comments, but that's okay for our purposes
-            const hasFunctionKeyword = /\bfunction\b/.test(code);
-            const hasArrow = /=>/.test(code);
-            expect(hasFunctionKeyword || hasArrow).toBe(false);
-          });
-          TEST
-
-      - name: Install
-        id: install
-        run: npm ci
-
-      - name: Run Jest
-        id: run_tests
-        run: |
-          set -e
-          # REQUIRED
-          npm test -- --testPathPattern "REQUIRED" --json --outputFile REQUIRED.json
-          # INVALID_COLOR
-          npm test -- --testPathPattern "INVALID_COLOR" --json --outputFile INVALID_COLOR.json
-          # NO_FUNCTIONS
-          npm test -- --testPathPattern "NO_FUNCTIONS" --json --outputFile NO_FUNCTIONS.json
-
-      - name: Prepare reporter env (names must match "T_<ID_UPPERCASE>_RESULTS")
-        id: prepare_env
-        run: |
-          echo "T_REQUIRED_RESULTS=$(cat REQUIRED.json)" >> $GITHUB_ENV
-          echo "T_INVALID_COLOR_RESULTS=$(cat INVALID_COLOR.json)" >> $GITHUB_ENV
-          echo "T_NO_FUNCTIONS_RESULTS=$(cat NO_FUNCTIONS.json)" >> $GITHUB_ENV
-
-      - name: Report (GitHub Classroom)
-        id: report
+      # === Report to Classroom ===
+      - name: Report grades
         uses: classroom-resources/autograding-grading-reporter@v1
-        env:
-          T_REQUIRED_RESULTS: ${{ env.T_REQUIRED_RESULTS }}
-          T_INVALID_COLOR_RESULTS: ${{ env.T_INVALID_COLOR_RESULTS }}
-          T_NO_FUNCTIONS_RESULTS: ${{ env.T_NO_FUNCTIONS_RESULTS }}
         with:
-          runners: |
-            required
-            invalid_color
-            no_functions
+          runners: 't_green_action,t_yellow_action,t_red_action,t_invalid_color,t_avg_even,t_array_usage'
+          token: ${{ github.token }}
