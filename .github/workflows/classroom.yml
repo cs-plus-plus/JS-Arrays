@@ -1,7 +1,8 @@
-name: Unit 8.5 Autograding (Prompts + console.log)
+name: autograde
 
 on:
   push:
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -33,271 +34,204 @@ jobs:
       - name: Write tests
         run: |
           mkdir -p __tests__
-          cat > __tests__/unit-8-5-arrays.test.cjs <<'EOF'
+          cat > __tests__/arrays.test.cjs <<'TESTEOF'
           const fs = require('fs');
           const path = require('path');
+          const vm = require('vm');
 
-          const scriptPath = path.resolve(process.cwd(), 'script.js');
-          const source = fs.existsSync(scriptPath)
-            ? fs.readFileSync(scriptPath, 'utf8')
-            : '';
+          const source = fs.readFileSync(path.resolve('script.js'), 'utf8');
 
-          function runWithPrompts(promptValues) {
-            if (!fs.existsSync(scriptPath)) {
-              throw new Error('script.js not found in repository root.');
-            }
-
-            const originalPrompt = global.prompt;
-            const originalConsoleLog = console.log;
-
-            let index = 0;
-            global.prompt = jest.fn(() => {
-              if (index < promptValues.length) {
-                return String(promptValues[index++]);
-              }
-              return '';
-            });
-
+          function runWithInputs(promptValues) {
+            let promptIndex = 0;
             const logs = [];
-            console.log = (...args) => logs.push(args.join(' '));
-
-            delete require.cache[scriptPath];
-            try {
-              require(scriptPath);
-            } finally {
-              console.log = originalConsoleLog;
-              global.prompt = originalPrompt;
-            }
-
-            return logs.map(String);
+            const sandbox = {
+              prompt: function(msg) { return promptValues[promptIndex++]; },
+              alert: function(msg) { },
+              console: { log: function(msg) { logs.push(String(msg)); }, error: function(){}, warn: function(){} },
+              parseInt: parseInt,
+              parseFloat: parseFloat,
+              isNaN: isNaN,
+              NaN: NaN,
+              undefined: undefined,
+              String: String,
+              Number: Number,
+              Math: Math,
+              Array: Array,
+            };
+            vm.createContext(sandbox);
+            vm.runInContext(source, sandbox, { timeout: 5000 });
+            return logs;
           }
 
-          describe('Unit 8.5 – Arrays (prompts + console.log)', () => {
-            test('green action lines', () => {
-              const logs = runWithPrompts(['GrEeN', 1, 2, 3, 4, 5]);
-              const actions = logs.filter(l => l.startsWith('Action:'));
-              expect(actions.length).toBeGreaterThanOrEqual(5);
-              expect(actions.slice(0, 5)).toEqual([
-                'Action: Go',
-                'Action: Go',
-                'Action: Go',
-                'Action: Go',
-                'Action: Go'
-              ]);
+          describe('Unit 8.5 – Arrays', function() {
+
+            test('colors warm up', function() {
+              let logs = runWithInputs(['10', '20', '30', '40', '50']);
+              let colorLogs = logs.filter(function(l) { return l.indexOf('Color:') !== -1; });
+              expect(colorLogs.length).toBe(3);
+              expect(colorLogs[0]).toBe('Color: red');
+              expect(colorLogs[1]).toBe('Color: green');
+              expect(colorLogs[2]).toBe('Color: blue');
             });
 
-            test('yellow action lines', () => {
-              const logs = runWithPrompts(['YELLOW', 1, 2, 3, 4, 5]);
-              const actions = logs.filter(l => l.startsWith('Action:'));
-              expect(actions.length).toBeGreaterThanOrEqual(5);
-              expect(actions.slice(0, 5)).toEqual([
-                'Action: Slow',
-                'Action: Slow',
-                'Action: Slow',
-                'Action: Slow',
-                'Action: Slow'
-              ]);
+            test('uses an array', function() {
+              expect(source).toMatch(/\[|\.push\s*\(/);
             });
 
-            test('red action lines', () => {
-              const logs = runWithPrompts(['red', 1, 2, 3, 4, 5]);
-              const actions = logs.filter(l => l.startsWith('Action:'));
-              expect(actions.length).toBeGreaterThanOrEqual(5);
-              expect(actions.slice(0, 5)).toEqual([
-                'Action: Stop',
-                'Action: Stop',
-                'Action: Stop',
-                'Action: Stop',
-                'Action: Stop'
-              ]);
+            test('uses a for loop', function() {
+              expect(source).toMatch(/\bfor\s*\(/);
             });
 
-            test('invalid color message', () => {
-              const logs = runWithPrompts(['blue', 1, 2, 3, 4, 5]);
-              const lower = logs.map(l => l.trim().toLowerCase());
-              expect(lower).toContain('invalid color');
-              const actionLines = logs.filter(l => l.startsWith('Action:'));
-              expect(actionLines.length).toBe(0);
+            test('numbers list', function() {
+              let logs = runWithInputs(['10', '20', '30', '40', '50']);
+              let numLine = logs.find(function(l) { return l.indexOf('Numbers:') !== -1; });
+              expect(numLine).toBeDefined();
+              expect(numLine).toBe('Numbers: 10, 20, 30, 40, 50');
             });
 
-            test('average and even count are correct', () => {
-              const logs = runWithPrompts(['green', 2, 4, 6, 8, 10]);
-              const avgLine = logs.find(l => l.startsWith('Average:'));
-              const evenLine = logs.find(l => l.startsWith('Even count:'));
+            test('sum', function() {
+              let logs = runWithInputs(['10', '20', '30', '40', '50']);
+              let sumLine = logs.find(function(l) { return l.indexOf('Sum:') !== -1; });
+              expect(sumLine).toBeDefined();
+              expect(sumLine).toBe('Sum: 150');
+            });
 
+            test('average and even count', function() {
+              let logs = runWithInputs(['10', '20', '30', '40', '50']);
+              let avgLine = logs.find(function(l) { return l.indexOf('Average:') !== -1; });
               expect(avgLine).toBeDefined();
+              expect(avgLine).toBe('Average: 30');
+              let evenLine = logs.find(function(l) { return l.indexOf('Even count:') !== -1; });
               expect(evenLine).toBeDefined();
-              expect(avgLine.trim()).toBe('Average: 6');
-              expect(evenLine.trim()).toBe('Even count: 5');
+              expect(evenLine).toBe('Even count: 5');
             });
 
-            test('script uses array for numbers', () => {
-              expect(source).toBeTruthy();
-              const hasBracketArray = /\[[^\]]*\]/.test(source);
-              const hasArrayCtor =
-                /new\s+Array\s*\(/i.test(source) || /Array\s*\(/.test(source);
-              const hasPush = /\.push\s*\(/.test(source);
-              const usesIndex =
-                /\[[0-4]\]/.test(source) ||
-                /\[i\]/.test(source) ||
-                /\[index\]/i.test(source);
-
-              expect(hasBracketArray || hasArrayCtor).toBe(true);
-              expect(hasPush || usesIndex).toBe(true);
+            test('largest', function() {
+              let logs = runWithInputs(['10', '20', '30', '40', '50']);
+              let largestLine = logs.find(function(l) { return l.indexOf('Largest:') !== -1; });
+              expect(largestLine).toBeDefined();
+              expect(largestLine).toBe('Largest: 50');
             });
+
           });
-          EOF
+          TESTEOF
 
       # === Graded steps (sum to 100) ===
-      - id: t_green_action
-        name: green action lines
+      - id: t_colors
+        name: colors warm up
         uses: classroom-resources/autograding-command-grader@v1
         with:
-          test-name: green action lines
+          test-name: colors warm up
           setup-command: echo "ready"
-          command: npx jest --runInBand --testNamePattern "green action lines$"
+          command: npx jest --runInBand --testNamePattern "colors warm up$"
           timeout: 60
           max-score: 15
 
-      - id: t_yellow_action
-        name: yellow action lines
+      - id: t_array
+        name: uses an array
         uses: classroom-resources/autograding-command-grader@v1
         with:
-          test-name: yellow action lines
+          test-name: uses an array
           setup-command: echo "ready"
-          command: npx jest --runInBand --testNamePattern "yellow action lines$"
-          timeout: 60
-          max-score: 15
-
-      - id: t_red_action
-        name: red action lines
-        uses: classroom-resources/autograding-command-grader@v1
-        with:
-          test-name: red action lines
-          setup-command: echo "ready"
-          command: npx jest --runInBand --testNamePattern "red action lines$"
-          timeout: 60
-          max-score: 15
-
-      - id: t_invalid_color
-        name: invalid color message
-        uses: classroom-resources/autograding-command-grader@v1
-        with:
-          test-name: invalid color message
-          setup-command: echo "ready"
-          command: npx jest --runInBand --testNamePattern "invalid color message$"
+          command: npx jest --runInBand --testNamePattern "uses an array$"
           timeout: 60
           max-score: 10
 
-      - id: t_avg_even
-        name: average and even count are correct
+      - id: t_for_loop
+        name: uses a for loop
         uses: classroom-resources/autograding-command-grader@v1
         with:
-          test-name: average and even count are correct
+          test-name: uses a for loop
           setup-command: echo "ready"
-          command: npx jest --runInBand --testNamePattern "average and even count are correct$"
+          command: npx jest --runInBand --testNamePattern "uses a for loop$"
           timeout: 60
-          max-score: 30
+          max-score: 5
 
-      - id: t_array_usage
-        name: script uses array for numbers
+      - id: t_numbers
+        name: numbers list
         uses: classroom-resources/autograding-command-grader@v1
         with:
-          test-name: script uses array for numbers
+          test-name: numbers list
           setup-command: echo "ready"
-          command: npx jest --runInBand --testNamePattern "script uses array for numbers$"
+          command: npx jest --runInBand --testNamePattern "numbers list$"
           timeout: 60
           max-score: 15
 
-      # === Prepare reporter env (for GitHub Classroom) ===
-      - name: Prepare reporter env
-        id: prepEnv
-        shell: bash
-        run: |
-          echo "T_GREEN_ACTION_RESULTS=${{ steps.t_green_action.outputs.result }}"       >> "$GITHUB_ENV"
-          echo "T_YELLOW_ACTION_RESULTS=${{ steps.t_yellow_action.outputs.result }}"     >> "$GITHUB_ENV"
-          echo "T_RED_ACTION_RESULTS=${{ steps.t_red_action.outputs.result }}"           >> "$GITHUB_ENV"
-          echo "T_INVALID_COLOR_RESULTS=${{ steps.t_invalid_color.outputs.result }}"     >> "$GITHUB_ENV"
-          echo "T_AVG_EVEN_RESULTS=${{ steps.t_avg_even.outputs.result }}"               >> "$GITHUB_ENV"
-          echo "T_ARRAY_USAGE_RESULTS=${{ steps.t_array_usage.outputs.result }}"         >> "$GITHUB_ENV"
+      - id: t_sum
+        name: sum
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: sum
+          setup-command: echo "ready"
+          command: npx jest --runInBand --testNamePattern "^Unit 8.5.*sum$"
+          timeout: 60
+          max-score: 15
 
-            # === Combined summary using the same JSON that the reporter uses ===
-      - name: Build & publish combined summary
+      - id: t_avg_even
+        name: average and even count
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: average and even count
+          setup-command: echo "ready"
+          command: npx jest --runInBand --testNamePattern "average and even count$"
+          timeout: 60
+          max-score: 20
+
+      - id: t_largest
+        name: largest
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: largest
+          setup-command: echo "ready"
+          command: npx jest --runInBand --testNamePattern "largest$"
+          timeout: 60
+          max-score: 20
+
+      # Summary
+      - name: Build summary
         shell: bash
         run: |
+          npx jest --runInBand --json --outputFile=jest-summary.json || true
           node - <<'NODE'
-          const fs = require('fs');
-
+          const fs = require("fs");
+          let jr = {};
+          try { jr = JSON.parse(fs.readFileSync("jest-summary.json","utf8")); } catch {}
+          const assertions = (jr.testResults||[]).flatMap(t => t.assertionResults || []);
           const tests = [
-            { key: 'GREEN_ACTION',  label: 'green action lines',                 weight: 15 },
-            { key: 'YELLOW_ACTION', label: 'yellow action lines',                weight: 15 },
-            { key: 'RED_ACTION',    label: 'red action lines',                   weight: 15 },
-            { key: 'INVALID_COLOR', label: 'invalid color message',              weight: 10 },
-            { key: 'AVG_EVEN',      label: 'average and even count are correct', weight: 30 },
-            { key: 'ARRAY_USAGE',   label: 'script uses array for numbers',      weight: 15 },
+            { name: "colors warm up", pts: 15 },
+            { name: "uses an array", pts: 10 },
+            { name: "uses a for loop", pts: 5 },
+            { name: "numbers list", pts: 15 },
+            { name: "sum", pts: 15 },
+            { name: "average and even count", pts: 20 },
+            { name: "largest", pts: 20 },
           ];
-
-          let total = 0;
           let earned = 0;
           const lines = ["# Unit 8.5 Autograder Summary", ""];
-
           for (const t of tests) {
-            total += t.weight;
-            const envName = `T_${t.key}_RESULTS`;
-            const raw = process.env[envName] || "";
-            let passed = false;
-
-            try {
-              // Results from autograding-command-grader are base64-encoded JSON
-              let decoded;
-              try {
-                decoded = Buffer.from(raw, 'base64').toString('utf8');
-              } catch {
-                decoded = raw; // fallback if it's ever plain JSON
-              }
-
-              const obj = JSON.parse(decoded);
-
-              // GitHub Classroom format: { version, status, max_score, tests: [...] }
-              const status = (obj.status || "").toString().toLowerCase();
-
-              if (status === 'pass' || status === 'passed') {
-                passed = true;
-              } else if (Array.isArray(obj.tests)) {
-                // extra safety: if any test entry is marked pass, we treat the runner as passed
-                passed = obj.tests.some(
-                  (test) =>
-                    (test.status || "").toString().toLowerCase() === 'pass' ||
-                    (test.status || "").toString().toLowerCase() === 'passed'
-                );
-              }
-            } catch (e) {
-              // If decoding/parsing fails, treat as not passed
-            }
-
-            if (passed) {
-              earned += t.weight;
-              lines.push(`✅ ${t.label} (${t.weight} pts)`);
-            } else {
-              lines.push(`❌ ${t.label} (${t.weight} pts)`);
-            }
+            const a = assertions.find(x => x.title === t.name);
+            const passed = !!a && a.status === "passed";
+            if (passed) earned += t.pts;
+            lines.push((passed ? "✅" : "❌") + " " + t.name + " (" + t.pts + " pts)");
           }
-
-          lines.push("");
-          lines.push(`**Score: ${earned}/${total}**`);
-
-          const summaryPath = process.env.GITHUB_STEP_SUMMARY;
-          if (summaryPath) {
-            fs.appendFileSync(summaryPath, lines.join("\n") + "\n");
-          } else {
-            console.log(lines.join("\n"));
-          }
+          lines.push("", "**Score: " + earned + "/100**");
+          console.log(lines.join("\n"));
+          if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join("\n") + "\n");
           NODE
 
+      - name: Prepare reporter env
+        shell: bash
+        run: |
+          echo "T_COLORS_RESULTS=${{ steps.t_colors.outputs.result }}"       >> "$GITHUB_ENV"
+          echo "T_ARRAY_RESULTS=${{ steps.t_array.outputs.result }}"         >> "$GITHUB_ENV"
+          echo "T_FOR_LOOP_RESULTS=${{ steps.t_for_loop.outputs.result }}"   >> "$GITHUB_ENV"
+          echo "T_NUMBERS_RESULTS=${{ steps.t_numbers.outputs.result }}"     >> "$GITHUB_ENV"
+          echo "T_SUM_RESULTS=${{ steps.t_sum.outputs.result }}"             >> "$GITHUB_ENV"
+          echo "T_AVG_EVEN_RESULTS=${{ steps.t_avg_even.outputs.result }}"   >> "$GITHUB_ENV"
+          echo "T_LARGEST_RESULTS=${{ steps.t_largest.outputs.result }}"     >> "$GITHUB_ENV"
 
-      # === Report to Classroom ===
       - name: Report grades
         uses: classroom-resources/autograding-grading-reporter@v1
         with:
-          runners: 't_green_action,t_yellow_action,t_red_action,t_invalid_color,t_avg_even,t_array_usage'
+          runners: 't_colors,t_array,t_for_loop,t_numbers,t_sum,t_avg_even,t_largest'
           token: ${{ github.token }}

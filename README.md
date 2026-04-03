@@ -1,279 +1,223 @@
-# CS++ JavaScript — Lesson 8.5: Arrays
+# CS++ JavaScript — Arrays
 
-> **Lesson 8.5** | 100 Points | 6 Autograded Tests
+> **Unit 8.5** | 100 Points | 7 Automated Tests
 
-In this assignment you will use `prompt()` and `console.log()` to build a traffic light program and collect numbers into an array for calculations. No DOM manipulation — everything uses prompt for input and console.log for output.
+In this assignment you will learn how to use **arrays** — ordered lists that store multiple values in a single variable. You will collect numbers from the user and calculate statistics.
 
 ---
 
 ## Table of Contents
 
-1. [Concepts You Need](#concepts-you-need)
-2. [Project Overview](#project-overview)
-3. [Exact Requirements](#exact-requirements)
-4. [File Structure](#file-structure)
-5. [Autograding](#autograding)
-6. [Try It Yourself — Practice Examples](#try-it-yourself--practice-examples)
-7. [Tips for Success](#tips-for-success)
-8. [FAQ](#faq)
+1. [What Is an Array?](#what-is-an-array)
+2. [Creating Arrays](#creating-arrays)
+3. [Accessing Elements](#accessing-elements)
+4. [Adding Elements with .push()](#adding-elements-with-push)
+5. [Looping Through Arrays](#looping-through-arrays)
+6. [Common Array Patterns](#common-array-patterns)
+7. [Assignment](#assignment)
+8. [Scoring Rubric](#scoring-rubric)
+9. [Tips for Success](#tips-for-success)
+10. [FAQ](#faq)
 
 ---
 
-## Concepts You Need
+## What Is an Array?
 
-### Arrays
-
-An array is an ordered list of values:
+An **array** is a list of values stored in a single variable:
 
 ```javascript
 let colors = ["red", "green", "blue"];
-console.log(colors[0]);        // "red" (first element, index 0)
-console.log(colors.length);    // 3
-
-colors.push("yellow");         // add to the end
-console.log(colors);           // ["red", "green", "blue", "yellow"]
+let scores = [95, 87, 72, 100];
 ```
 
-### Accessing Array Elements
+Without arrays, you would need a separate variable for each value — impractical for large collections.
+
+---
+
+## Creating Arrays
+
+Create an empty array and add items later:
 
 ```javascript
-let nums = [10, 20, 30];
-
-// Read by index
-console.log(nums[0]);   // 10
-console.log(nums[2]);   // 30
-
-// Change by index
-nums[1] = 25;
-console.log(nums);      // [10, 25, 30]
-
-// Loop through all elements
-for (let i = 0; i < nums.length; i++) {
-    console.log(nums[i]);
-}
+let numbers = [];  // empty array
 ```
 
-### Useful Array Methods
-
-| Method | What It Does | Example |
-|--------|-------------|---------|
-| `push(value)` | Add to the end | `arr.push(42)` |
-| `pop()` | Remove from the end | `arr.pop()` |
-| `length` | Number of elements | `arr.length` |
-| `indexOf(value)` | Find position of a value | `arr.indexOf("red")` |
-
-### String Comparison (Case-Insensitive)
-
-Use `.toLowerCase()` to compare strings regardless of case:
+Or create an array with values:
 
 ```javascript
-let input = "RED";
-if (input.toLowerCase() === "red") {
-    console.log("It's red!");  // this runs
-}
-```
-
-### The Modulo Operator (%)
-
-The remainder operator tells you if a number is even or odd:
-
-```javascript
-10 % 2   // 0 (even — no remainder)
-7 % 2    // 1 (odd — remainder of 1)
-
-if (num % 2 === 0) {
-    console.log("Even");
-} else {
-    console.log("Odd");
-}
-```
-
-### Calculating an Average
-
-```javascript
-let nums = [10, 20, 30, 40, 50];
-let sum = 0;
-
-for (let i = 0; i < nums.length; i++) {
-    sum += nums[i];
-}
-
-let average = sum / nums.length;
-console.log("Average: " + average);  // Average: 30
+let fruits = ["apple", "banana", "cherry"];
 ```
 
 ---
 
-## Project Overview
+## Accessing Elements
 
-Your `script.js` runs two tasks in order when the page loads:
+Array elements are numbered starting at **0** (called the **index**):
 
-1. **Traffic Light** — Ask for a color, print the matching action 5 times
-2. **Number Collection** — Ask for 5 numbers, store them in an array, calculate the average and count even numbers
-
----
-
-## Exact Requirements
-
-### Part 1: Traffic Light
-
-1. Call `prompt()` once to ask for a traffic light color
-2. The input should be **case-insensitive** (accept "RED", "red", "Red", etc.)
-3. If the color is valid, print the matching action **exactly 5 times** using `console.log()`:
-
-| Color | Output (printed 5 times) |
-|-------|-------------------------|
-| green | `Action: Go` |
-| yellow | `Action: Slow` |
-| red | `Action: Stop` |
-
-4. If the color is not red, yellow, or green, print exactly: `Invalid color` (once, no action lines)
-
-### Part 2: Number Collection
-
-1. Call `prompt()` **five separate times** to collect five numbers
-2. Store all five numbers in an **array**
-3. Calculate and print the average with the exact format: `Average: <number>`
-4. Count how many of the five numbers are even and print with the exact format: `Even count: <number>`
-
-### Full Example Output (green, numbers 2, 4, 6, 8, 10)
-
-```
-Action: Go
-Action: Go
-Action: Go
-Action: Go
-Action: Go
-Average: 6
-Even count: 5
-```
-
-### Example with Invalid Color (blue, numbers 1, 2, 3, 4, 5)
-
-```
-Invalid color
-Average: 3
-Even count: 2
-```
-
----
-
-## File Structure
-
-```
-JS-Arrays/
-├── index.html              <-- Loads script.js (provided)
-├── script.js               <-- YOUR CODE GOES HERE
-└── .github/
-    └── workflows/
-        └── classroom.yml   <-- Autograding tests (DO NOT MODIFY)
-```
-
-**Edit only `script.js`.** Write all your code at the top level so it runs when the file loads.
-
----
-
-## Autograding
-
-| Test | What It Checks | Points |
-|------|---------------|--------|
-| Green action lines | Prints "Action: Go" five times | 15 |
-| Yellow action lines | Prints "Action: Slow" five times | 15 |
-| Red action lines | Prints "Action: Stop" five times | 15 |
-| Invalid color message | Prints "Invalid color", no action lines | 10 |
-| Average and even count | Correct "Average:" and "Even count:" output | 30 |
-| Uses array for numbers | Static analysis: finds brackets, push/index usage | 15 |
-
-**Total: 100 points**
-
----
-
-## Try It Yourself — Practice Examples
-
-Create `practice.js` and run it with `node practice.js`.
-
-**Example 1 — Array basics:**
 ```javascript
-// practice.js — building an array
+let colors = ["red", "green", "blue"];
+// Index:       0       1        2
+
+let first = colors[0];   // "red"
+let second = colors[1];  // "green"
+let last = colors[2];    // "blue"
+```
+
+Use `.length` to get the number of elements:
+
+```javascript
+colors.length  // 3
+```
+
+---
+
+## Adding Elements with .push()
+
+`.push()` adds a value to the **end** of an array:
+
+```javascript
 let numbers = [];
-numbers.push(10);
-numbers.push(20);
-numbers.push(30);
-console.log("Array:", numbers);        // Array: [10, 20, 30]
-console.log("Length:", numbers.length); // Length: 3
-console.log("First:", numbers[0]);     // First: 10
-console.log("Last:", numbers[numbers.length - 1]); // Last: 30
+numbers.push(10);   // [10]
+numbers.push(20);   // [10, 20]
+numbers.push(30);   // [10, 20, 30]
 ```
 
-**Example 2 — Sum and average:**
+---
+
+## Looping Through Arrays
+
+Use a `for` loop to visit every element:
+
 ```javascript
-// practice.js — calculating average
-let nums = [10, 20, 30, 40, 50];
+let scores = [95, 87, 72];
+for (let i = 0; i < scores.length; i++) {
+  console.log(scores[i]);
+}
+// Prints: 95, 87, 72 (one per line)
+```
+
+The loop variable `i` goes from `0` to `length - 1`, which covers every valid index.
+
+---
+
+## Common Array Patterns
+
+### Building a String from an Array
+
+```javascript
+let result = "";
+for (let i = 0; i < arr.length; i++) {
+  result = result + arr[i];
+  if (i < arr.length - 1) {
+    result = result + ", ";
+  }
+}
+```
+
+### Calculating a Sum
+
+```javascript
 let sum = 0;
-for (let i = 0; i < nums.length; i++) {
-    sum += nums[i];
+for (let i = 0; i < arr.length; i++) {
+  sum = sum + arr[i];
 }
-console.log("Average: " + (sum / nums.length));
-// Output: Average: 30
 ```
 
-**Example 3 — Counting even numbers:**
+### Finding the Largest Value
+
 ```javascript
-// practice.js — counting evens
-let nums = [1, 2, 3, 4, 5];
-let evenCount = 0;
-for (let i = 0; i < nums.length; i++) {
-    if (nums[i] % 2 === 0) {
-        evenCount++;
-    }
+let largest = arr[0];
+for (let i = 1; i < arr.length; i++) {
+  if (arr[i] > largest) {
+    largest = arr[i];
+  }
 }
-console.log("Even count: " + evenCount);
-// Output: Even count: 2
 ```
 
-**Example 4 — Case-insensitive comparison:**
+### Counting Items that Match a Condition
+
 ```javascript
-// practice.js — case insensitive
-let colors = ["RED", "Green", "YELLOW", "blue"];
-for (let color of colors) {
-    let lower = color.toLowerCase();
-    if (lower === "red" || lower === "yellow" || lower === "green") {
-        console.log(color + " is a valid traffic light color");
-    } else {
-        console.log(color + " is invalid");
-    }
+let count = 0;
+for (let i = 0; i < arr.length; i++) {
+  if (arr[i] % 2 === 0) {
+    count = count + 1;
+  }
 }
 ```
+
+---
+
+## Assignment
+
+This program uses `prompt()` for input and `console.log()` for output. It runs automatically when the page loads. Open the browser console (F12) to see results.
+
+### Warm-Up: Favorite Colors — 15 points
+
+1. Create an array with exactly three strings: `"red"`, `"green"`, `"blue"`
+2. Use a `for` loop to print each one:
+   - `Color: red`
+   - `Color: green`
+   - `Color: blue`
+
+### Number Analyzer — 70 points
+
+1. Create an empty array
+2. Use a `for` loop to prompt for 5 numbers and `.push()` each into the array
+3. Print the numbers on one line: `Numbers: 10, 20, 30, 40, 50`
+4. Calculate and print the sum: `Sum: 150`
+5. Calculate and print the average: `Average: 30`
+6. Count and print even numbers: `Even count: 3`
+7. Find and print the largest: `Largest: 50`
+
+### Code Quality — 15 points
+
+- **Uses an array** — brackets `[]` or `.push()` (10 points)
+- **Uses a for loop** — `for (` (5 points)
+
+---
+
+## Scoring Rubric
+
+| # | Test | Points | What the autograder checks |
+|---|------|--------|---------------------------|
+| 1 | Colors warm-up | 15 | Prints "Color: red", "Color: green", "Color: blue" |
+| 2 | Uses an array | 10 | Source contains `[]` or `.push(` |
+| 3 | Uses a for loop | 5 | Source contains `for (` |
+| 4 | Numbers list | 15 | Prints "Numbers: 10, 20, 30, 40, 50" |
+| 5 | Sum | 15 | Prints "Sum: 150" |
+| 6 | Average and even count | 20 | Prints "Average: 30" and "Even count: 3" |
+| 7 | Largest | 20 | Prints "Largest: 50" |
+| | **Total** | **100** | |
 
 ---
 
 ## Tips for Success
 
-1. Use `parseFloat()` or `parseInt()` to convert prompt input to numbers before doing math
-2. Use `.toLowerCase()` on the color input to handle any capitalization
-3. You must use an **array** to store the five numbers — the test checks for this using static analysis
-4. Print each action line separately with `console.log()`, not all on one line
-5. The average should be a regular number (not formatted to a specific number of decimals)
-6. Test your code with different colors and number combinations
+1. **Start with the colors warm-up** — it teaches array basics before the harder part
+2. **Use `parseFloat()` when collecting numbers** — prompt returns strings
+3. **Build the number list string carefully** — add ", " between numbers but not after the last one
+4. **Test with known values** — if you enter 10, 20, 30, 40, 50 you should get Sum: 150, Average: 30
+5. **Even check**: a number is even if `number % 2 === 0`
+6. **Open the console** — all output goes to `console.log()`, not `alert()`
 
 ---
 
 ## FAQ
 
-**Q: Does the color comparison need to be case-insensitive?**
-Yes. The user might type "RED", "Red", or "red" — all should work. Use `.toLowerCase()` on the input.
+**Q: Why console.log() instead of alert()?**
+When a program has many outputs, using `alert()` for each one would be annoying (too many popups). `console.log()` prints to the developer console, which is better for multiple outputs.
 
-**Q: What if the user types a number with decimals for the number collection?**
-Use `parseFloat()` to handle both integers and decimals. The even count check should use the modulo operator (`% 2 === 0`).
+**Q: How do I open the browser console?**
+Press F12, or right-click the page and choose "Inspect", then click the "Console" tab.
 
-**Q: How does the test know I used an array?**
-The test performs static analysis on your `script.js` file, looking for array syntax like `[]`, `.push()`, or bracket access like `arr[i]`.
+**Q: What does `.push()` do?**
+It adds a value to the end of an array. `numbers.push(42)` adds `42` to the end of the `numbers` array.
 
-**Q: Should I use console.log or alert for output?**
-Use `console.log()` for all output in this assignment. Do not use `alert()`.
+**Q: Why start the largest with `arr[0]` instead of 0?**
+If all numbers are negative, starting with 0 would give a wrong answer. Starting with the first actual value guarantees correctness.
 
 ---
 
-View all assignments and scoring breakdowns at [csplusplus.com/js-tests](https://csplusplus.com/js-tests)
+View all assignments at [csplusplus.com/js-tests](https://csplusplus.com/js-tests)
 
 *CS++ — AP Computer Science Principles — [csplusplus.com](https://csplusplus.com)*
