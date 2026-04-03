@@ -166,7 +166,7 @@ This program uses `prompt()` for input and `console.log()` for output. It runs a
 3. Print the numbers on one line: `Numbers: 10, 20, 30, 40, 50`
 4. Calculate and print the sum: `Sum: 150`
 5. Calculate and print the average: `Average: 30`
-6. Count and print even numbers: `Even count: 3`
+6. Count and print even numbers: `Even count: 5`
 7. Find and print the largest: `Largest: 50`
 
 ### Code Quality — 15 points
@@ -185,7 +185,7 @@ This program uses `prompt()` for input and `console.log()` for output. It runs a
 | 3 | Uses a for loop | 5 | Source contains `for (` |
 | 4 | Numbers list | 15 | Prints "Numbers: 10, 20, 30, 40, 50" |
 | 5 | Sum | 15 | Prints "Sum: 150" |
-| 6 | Average and even count | 20 | Prints "Average: 30" and "Even count: 3" |
+| 6 | Average and even count | 20 | Prints "Average: 30" and "Even count: 5" |
 | 7 | Largest | 20 | Prints "Largest: 50" |
 | | **Total** | **100** | |
 
