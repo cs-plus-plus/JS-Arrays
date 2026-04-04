@@ -26,11 +26,13 @@ In this assignment you will learn how to use **arrays** — ordered lists that s
 An **array** is a list of values stored in a single variable:
 
 ```javascript
-let colors = ["red", "green", "blue"];
-let scores = [95, 87, 72, 100];
+const colors = ["red", "green", "blue"];
+const scores = [95, 87, 72, 100];
 ```
 
 Without arrays, you would need a separate variable for each value — impractical for large collections.
+
+> **Why `const` for arrays?** Use `const` when the variable itself won't be reassigned to a different array. You can still change the *contents* of a `const` array — `.push()`, indexing, and other modifications all work. What `const` prevents is pointing the variable at a completely new array. This is a best practice because it makes your code clearer: readers know the variable always refers to the same array.
 
 ---
 
@@ -39,13 +41,13 @@ Without arrays, you would need a separate variable for each value — impractica
 Create an empty array and add items later:
 
 ```javascript
-let numbers = [];  // empty array
+const numbers = [];  // empty array — const is fine, we'll .push() into it
 ```
 
 Or create an array with values:
 
 ```javascript
-let fruits = ["apple", "banana", "cherry"];
+const fruits = ["apple", "banana", "cherry"];
 ```
 
 ---
@@ -55,7 +57,7 @@ let fruits = ["apple", "banana", "cherry"];
 Array elements are numbered starting at **0** (called the **index**):
 
 ```javascript
-let colors = ["red", "green", "blue"];
+const colors = ["red", "green", "blue"];
 // Index:       0       1        2
 
 let first = colors[0];   // "red"
@@ -76,11 +78,13 @@ colors.length  // 3
 `.push()` adds a value to the **end** of an array:
 
 ```javascript
-let numbers = [];
+const numbers = [];
 numbers.push(10);   // [10]
 numbers.push(20);   // [10, 20]
 numbers.push(30);   // [10, 20, 30]
 ```
+
+> Notice we declared `numbers` with `const` but we can still `.push()` into it. That's because `const` only prevents *reassignment* (`numbers = [1, 2, 3]` would fail), not *mutation* (changing the contents).
 
 ---
 
@@ -89,7 +93,7 @@ numbers.push(30);   // [10, 20, 30]
 Use a `for` loop to visit every element:
 
 ```javascript
-let scores = [95, 87, 72];
+const scores = [95, 87, 72];
 for (let i = 0; i < scores.length; i++) {
   console.log(scores[i]);
 }
