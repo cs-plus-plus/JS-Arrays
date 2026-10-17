@@ -119,7 +119,7 @@ jobs:
       # === Graded steps (sum to 100) ===
       - id: t_colors
         name: colors warm up
-        uses: classroom-resources/autograding-command-grader@v1
+        uses: cs-plus-plus/autograding-command-grader@v1
         with:
           test-name: colors warm up
           setup-command: echo "ready"
@@ -129,7 +129,7 @@ jobs:
 
       - id: t_array
         name: uses an array
-        uses: classroom-resources/autograding-command-grader@v1
+        uses: cs-plus-plus/autograding-command-grader@v1
         with:
           test-name: uses an array
           setup-command: echo "ready"
@@ -139,7 +139,7 @@ jobs:
 
       - id: t_for_loop
         name: uses a for loop
-        uses: classroom-resources/autograding-command-grader@v1
+        uses: cs-plus-plus/autograding-command-grader@v1
         with:
           test-name: uses a for loop
           setup-command: echo "ready"
@@ -149,7 +149,7 @@ jobs:
 
       - id: t_numbers
         name: numbers list
-        uses: classroom-resources/autograding-command-grader@v1
+        uses: cs-plus-plus/autograding-command-grader@v1
         with:
           test-name: numbers list
           setup-command: echo "ready"
@@ -159,7 +159,7 @@ jobs:
 
       - id: t_sum
         name: sum
-        uses: classroom-resources/autograding-command-grader@v1
+        uses: cs-plus-plus/autograding-command-grader@v1
         with:
           test-name: sum
           setup-command: echo "ready"
@@ -169,7 +169,7 @@ jobs:
 
       - id: t_avg_even
         name: average and even count
-        uses: classroom-resources/autograding-command-grader@v1
+        uses: cs-plus-plus/autograding-command-grader@v1
         with:
           test-name: average and even count
           setup-command: echo "ready"
@@ -179,7 +179,7 @@ jobs:
 
       - id: t_largest
         name: largest
-        uses: classroom-resources/autograding-command-grader@v1
+        uses: cs-plus-plus/autograding-command-grader@v1
         with:
           test-name: largest
           setup-command: echo "ready"
@@ -231,7 +231,7 @@ jobs:
           echo "T_LARGEST_RESULTS=${{ steps.t_largest.outputs.result }}"     >> "$GITHUB_ENV"
 
       - name: Report grades
-        uses: classroom-resources/autograding-grading-reporter@v1
+        uses: cs-plus-plus/autograding-grading-reporter@v1
         with:
           runners: 't_colors,t_array,t_for_loop,t_numbers,t_sum,t_avg_even,t_largest'
           token: ${{ github.token }}
