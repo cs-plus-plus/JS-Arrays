@@ -63,6 +63,16 @@ jobs:
             return logs;
           }
 
+          // script.js with its comment lines removed. The STEP comments name the
+          // very things these checks look for, so a check of the whole file would
+          // pass on untouched starter code.
+          function codeLines() {
+            return source.split('\n')
+              .map(function(line) { return line.trim(); })
+              .filter(function(line) { return !line.startsWith('//') && !line.startsWith('*'); })
+              .join('\n');
+          }
+
           describe('Unit 8.5 – Arrays', function() {
 
             test('colors warm up', function() {
@@ -75,11 +85,11 @@ jobs:
             });
 
             test('uses an array', function() {
-              expect(source).toMatch(/\[|\.push\s*\(/);
+              expect(codeLines()).toMatch(/\[|\.push\s*\(/);
             });
 
             test('uses a for loop', function() {
-              expect(source).toMatch(/\bfor\s*\(/);
+              expect(codeLines()).toMatch(/\bfor\s*\(/);
             });
 
             test('numbers list', function() {

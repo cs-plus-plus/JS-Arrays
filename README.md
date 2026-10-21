@@ -185,8 +185,8 @@ This program uses `prompt()` for input and `console.log()` for output. It runs a
 | # | Test | Points | What the autograder checks |
 |---|------|--------|---------------------------|
 | 1 | Colors warm-up | 15 | Prints "Color: red", "Color: green", "Color: blue" |
-| 2 | Uses an array | 10 | Source contains `[]` or `.push(` |
-| 3 | Uses a for loop | 5 | Source contains `for (` |
+| 2 | Uses an array | 10 | Your code (not a comment) contains `[` or `.push(` |
+| 3 | Uses a for loop | 5 | Your code (not a comment) contains `for (` |
 | 4 | Numbers list | 15 | Prints "Numbers: 10, 20, 30, 40, 50" |
 | 5 | Sum | 15 | Prints "Sum: 150" |
 | 6 | Average and even count | 20 | Prints "Average: 30" and "Even count: 5" |
